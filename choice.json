@@ -1,0 +1,5 @@
+[{"no":1,"description":"ผ่านครบทุกคน","score":3},{"no":2,"description":"ผ่านไม่ครบทุกคน","score":2},{"no":3,"description":"อบรมแต่ยังสอบไม่ผ่านทุกคน","score":1},{"no":4,"description":"ไม่ดำเนินการ","score":0},{"no":5,"description":"รอถึงกำหนดการ","score":3}]
+[{"no":1,"description":"มีผลทดสอบและปรับนำไปใช้ถูกต้อง","score":3},{"no":2,"description":"ไม่มีผลทดสอบ","score":1}]
+[{"no":1,"description":"ผ่านมาตรฐาน","score":3},{"no":2,"description":"ไม่ผ่านมาตรฐาน","score":1}]
+[{"no":1,"description":"ตรวจแล้ว-ปกติ","score":3},{"no":2,"description":"เครื่องจักรเสียและไม่แจ้งซ่อม","score":1},{"no":3,"description":"ไม่มีผลตรวจเครื่องจักร","score":0}]
+[{"no":1,"description":"ตรวจแล้ว-ปกติ","score":3},{"no":2,"description":"ตรวจแล้ว-ไม่ปกติ","score":1},{"no":3,"description":"ไม่มีผลตรวจเครื่องจักร","score":0}]
