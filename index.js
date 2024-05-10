@@ -1,41 +1,17 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const dotenv = require('dotenv');
-const app = express();
-const mysql = require('mysql2/promise');
-const port = 3001;
-const auditRoutes = require('./PostForm'); // นำเข้า Router ที่คุณสร้าง
+const pool = require('./src/config/db');  // Importing pool from db.js
+const auditRoutes = require('./PostForm');
+const auditFormRoutes = require('./src/Routes/AuditformGet');
 
+const app = express();
+const port = 3001;
 
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
 
-
-dotenv.config();
-
-
-const pool = mysql.createPool({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_DATABASE,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-});
-
-(async () => {
-    try {
-        const connection = await pool.getConnection();
-        console.log('Connected to MySQL!');
-        connection.release();
-    } catch (error) {
-        console.error('Error connecting to MySQL:', error);
-    }
-})();
 
 
 // สร้าง route สำหรับการ login
@@ -85,23 +61,6 @@ app.get('/auditType', async (req, res, next) => {
     }
 });
 
-app.get('/auditList', async (req, res, next) => {
-    try{
-        const [rows] = await pool.query(`
-        SELECT 
-        ag.*, 
-        COUNT(aq.AUDIT_GROUP_ID) as NUM_QUESTIONS, 
-        SUM(aq.K_SCORE) as TOTAL_K_SCORE
-        FROM audit_group ag
-        LEFT JOIN audit_question aq ON ag.AUDIT_GROUP_ID = aq.AUDIT_GROUP_ID
-        GROUP BY ag.AUDIT_GROUP_ID;
-        `);
-        res.json(rows);
-    } catch (error) {
-        next(error);
-    }
-})
-
 app.get('/AuditQuestion', async (req, res, next) => {
     try {
         // Get the audit_group from the query string
@@ -129,6 +88,7 @@ app.get('/AuditQuestion', async (req, res, next) => {
 });
 
 app.use('/auditResult', auditRoutes);
+app.use('/auditForm', auditFormRoutes);
 
 
 app.get('/getUserId', async (req, res) => {
@@ -142,6 +102,38 @@ app.get('/getUserId', async (req, res) => {
         res.status(500).json({ error: 'Failed to get user ID' });
     }
 });
+
+app.get('/AuditResultForm', async (req, res, next) => {
+    try {
+        const { audit_group_id, audit_type_id, audit_id, plant_no } = req.query;
+
+        if (!audit_group_id || !audit_type_id || !audit_id || !plant_no) {
+            res.status(400).json({ error: "Required parameters are missing" });
+            return;
+        }
+
+        const [rows] = await pool.query(`
+            SELECT
+                AUDIT_GROUP_ID,
+                AUDIT_TYPE_ID,
+                AUDIT_ID,
+                PLANT_NO,
+                QUESTION_ID,
+                CHOICE_NO
+            FROM audit_result
+            WHERE
+                AUDIT_GROUP_ID = ?
+                AND AUDIT_TYPE_ID = ?
+                AND AUDIT_ID = ?
+                AND PLANT_NO = ?
+        `, [audit_group_id, audit_type_id, audit_id, plant_no]);
+
+        res.json(rows); 
+    } catch (error) {
+        next(error); // Forward errors to the error-handling middleware
+    }
+});
+
 
 app.get('/AuditHistory', async (req, res, next) => {
     try {
@@ -204,5 +196,5 @@ app.get('/AuditHistory', async (req, res, next) => {
 });
 
 app.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
+    console.log(`Server running on ${port}`);
 });
