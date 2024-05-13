@@ -135,66 +135,6 @@ app.get('/AuditResultForm', async (req, res, next) => {
 });
 
 
-app.get('/AuditHistory', async (req, res, next) => {
-    try {
-        // Get the audit_group from the query string
-        const { plant_no } = req.query;
-
-        // Check if the audit_group parameter is provided
-        if (!plant_no) {
-            res.status(400).json({ error: "Audit group parameter is required" });
-            return;
-        }
-
-        // Execute the query with the audit_group parameter
-        const [rows] = await pool.query(`
-        SELECT
-        ar.AUDIT_ID,
-        p.NAME,
-        CASE 
-            WHEN COUNT(ag.AUDIT_GROUP_ID) = (SELECT COUNT(*) FROM audit_group) THEN 1
-            ELSE 0 
-        END AS isComplete,
-        SUM(ar.K_SCORE) * 2 AS actual_score,
-        (
-            SELECT SUM(K_SCORE)
-            FROM audit_question aq
-        ) * 2 AS total_score,
-        (
-            SELECT MIN(create_date)
-            FROM audit_result
-            WHERE AUDIT_ID = ar.AUDIT_ID
-        ) AS create_date,
-        (
-            SELECT MAX(update_date)
-            FROM audit_result
-            WHERE AUDIT_ID = ar.AUDIT_ID
-        ) AS update_date,
-        MAX(u.NAME) AS firstname,
-        MAX(u.LASTNAME) AS lastname
-    FROM
-        audit_result ar
-        INNER JOIN audit_group ag ON ar.AUDIT_GROUP_ID = ag.AUDIT_GROUP_ID
-        INNER JOIN plant p ON ar.PLANT_NO = p.PLANT_NO
-        LEFT JOIN users u ON u.USER_ID = ar.CREATE_BY_USER_ID
-    WHERE ar.PLANT_NO = ?
-    GROUP BY
-        ar.AUDIT_ID, p.NAME
-    ORDER BY
-        ar.AUDIT_ID DESC;
-    
-    
-    
-        `, [plant_no]);
-
-        // Return the result as JSON
-        res.json(rows);
-    } catch (error) {
-        // Forward errors to the error-handling middleware
-        next(error);
-    }
-});
-
 app.listen(port, () => {
     console.log(`Server running on ${port}`);
 });
