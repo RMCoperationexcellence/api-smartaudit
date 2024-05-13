@@ -4,6 +4,8 @@ const cors = require('cors');
 const pool = require('./src/config/db');  // Importing pool from db.js
 const auditRoutes = require('./PostForm');
 const auditFormRoutes = require('./src/Routes/AuditformGet');
+const auditLogin = require('./src/Auth/Login');
+const PlantRoutes = require('./src/Routes/PlantGet');
 
 const app = express();
 const port = 3001;
@@ -12,45 +14,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
 
-
-
-// สร้าง route สำหรับการ login
-app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-
-    try {
-        const [rows] = await pool.query('SELECT * FROM users WHERE USERNAME = ?', [username]);
-
-        // ถ้ามีผู้ใช้ในระบบ
-        if (rows.length > 0) {
-            const user = rows[0];
-            
-            // เปรียบเทียบรหัสผ่าน
-            if (user.PASSWORD === password) {
-                // รหัสผ่านถูกต้อง
-                res.json({ success: true, token: "YourSecretTokenHere" });
-            } else {
-                // รหัสผ่านไม่ถูกต้อง
-                res.status(401).json({ success: false, message: 'Password is incorrect' });
-            }
-        } else {
-            // ไม่พบชื่อผู้ใช้
-            res.status(401).json({ success: false, message: 'Username is incorrect' });
-        }
-    } catch (error) {
-        console.error('Error executing SQL:', error);
-        res.status(500).json({ success: false, message: 'Internal server error' });
-    }
-});
-
-app.get('/plantList', async (req, res, next) => {
-    try {
-        const [rows] = await pool.query('SELECT * FROM plant');
-        res.json(rows);
-    } catch (error) {
-        next(error);
-    }
-});
 
 app.get('/auditType', async (req, res, next) => {
     try {
@@ -89,6 +52,8 @@ app.get('/AuditQuestion', async (req, res, next) => {
 
 app.use('/auditResult', auditRoutes);
 app.use('/auditForm', auditFormRoutes);
+app.use('/login', auditLogin);
+app.use('/plantList', PlantRoutes);
 
 
 app.get('/getUserId', async (req, res) => {
