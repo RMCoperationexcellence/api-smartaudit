@@ -13,6 +13,32 @@ router.get('/auditgroup', async (req, res, next) => {
     }
 });
 
+router.get('/question', async (req, res, next) => {
+    try {
+        // Get the audit_group from the query string
+        const { audit_group } = req.query;
+
+        // Check if the audit_group parameter is provided
+        if (!audit_group) {
+            res.status(400).json({ error: "Audit group parameter is required" });
+            return;
+        }
+
+        // Execute the query with the audit_group parameter
+        const [rows] = await pool.query(`
+            SELECT *
+            FROM audit_question
+            WHERE AUDIT_GROUP_ID = ?
+        `, [audit_group]);
+
+        // Return the result as JSON
+        res.json(rows);
+    } catch (error) {
+        // Forward errors to the error-handling middleware
+        next(error);
+    }
+});
+
 router.get('/auditgroupresult', async (req, res, next) => {
     try {
         const { plant_no } = req.query;
