@@ -2,10 +2,10 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const pool = require('./src/config/db');  // Importing pool from db.js
-const auditRoutes = require('./PostForm');
-const auditFormRoutes = require('./src/Routes/AuditformGet');
+const auditFormRoutes = require('./src/Routes/Get/AuditformGet');
 const auditLogin = require('./src/Auth/Login');
-const PlantRoutes = require('./src/Routes/PlantGet');
+const PlantRoutes = require('./src/Routes/Get/PlantGet');
+const auditPostRoutes = require('./src/Routes/Post/AuditForm');
 
 const app = express();
 const port = 3001;
@@ -53,7 +53,7 @@ app.get('/AuditQuestion', async (req, res, next) => {
     }
 });
 
-app.use('/auditResult', auditRoutes);
+app.use('/auditPostForm', auditPostRoutes);
 app.use('/auditForm', auditFormRoutes);
 app.use('/login', auditLogin);
 app.use('/plantList', PlantRoutes);
