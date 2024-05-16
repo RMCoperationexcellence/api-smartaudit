@@ -13,6 +13,51 @@ router.get('/auditgroup', async (req, res, next) => {
     }
 });
 
+router.get('/auditQuestionResult', async (req, res, next) => {
+    try {
+        const { audit_group_id } = req.query;
+        const { plant_no } = req.query;
+
+        // ตรวจสอบว่ามีการส่งมาของอย่างน้อยหนึ่งค่าหรือไม่
+        if (!audit_group_id && !plant_no) {
+            return res.status(400).json({ error: "Required parameters are missing" });
+        }
+
+        let sql;
+        let params;
+
+        // กำหนด SQL query และ parameters ตามการมีหรือไม่มี audit_group_id
+        if (audit_group_id) {
+            sql = "SELECT * FROM audit_result WHERE audit_group_id = ? AND plant_no = ?";
+            params = [audit_group_id, plant_no];
+        } else {
+            sql = `
+            SELECT audit_group_id, 
+            MAX(update_date) AS UPDATE_DATE,
+            (SELECT CREATE_BY_USER_ID 
+            FROM audit_result AS sub
+            WHERE sub.audit_group_id = audit_result.audit_group_id
+            AND sub.update_date = (SELECT MAX(update_date) 
+                                    FROM audit_result
+                                    WHERE audit_group_id = sub.audit_group_id
+                                   AND plant_no = ?)
+            AND plant_no = ?
+            LIMIT 1) AS CREATE_BY_USER_ID
+            FROM audit_result
+            WHERE plant_no = ?
+            GROUP BY audit_group_id;
+            `;
+            params = [plant_no,plant_no,plant_no];
+        }
+
+        const [rows] = await pool.query(sql, params);
+        res.json(rows);
+    } catch (error) {
+        next(error);
+    }
+});
+
+
 router.get('/question', async (req, res, next) => {
     try {
         // Get the audit_group from the query string

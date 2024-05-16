@@ -5,16 +5,9 @@ const router = express.Router();
 router.post('/', async (req, res) => {
     const data = Array.isArray(req.body) ? req.body : [req.body]; // Ensure data is always an array
 
-    console.log('Incoming data:', data);
-
     // Validate incoming data
-    const invalidEntries = data.some(item => {
-        const { audit_group_id, question_id, plant_no, choice_no, choice_results, k_score } = item;
-        return audit_group_id == null || question_id == null || plant_no == null || choice_no == null || choice_results == null || k_score == null;
-    });
-
-    if (invalidEntries) {
-        return res.status(400).json({ success: false, message: 'All fields are required' });
+    if (data.length === 0) {
+        return res.status(400).json({ success: false, message: 'At least one entry is required' });
     }
 
     try {
