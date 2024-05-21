@@ -7,6 +7,7 @@ const auditLogin = require('./src/Auth/Login');
 const PlantRoutes = require('./src/Routes/App/Get/PlantGet');
 const auditPostRoutes = require('./src/Routes/App/Post/AuditForm');
 const ResultGets = require('./src/Routes/App/Get/ResultGet');
+const figlet = require('figlet');
 
 const app = express();
 const port = 3001;
@@ -17,6 +18,21 @@ dotenv.config();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.json());
+
+const logAsciiArt = (text) => {
+    figlet(text, (err, data) => {
+        if (err) {
+            console.log('Something went wrong...');
+            console.dir(err);
+            return;
+        }
+        console.log(data);
+    });
+};
+
+logAsciiArt('If   the   sun   refused   to   shine' );
+logAsciiArt('baby,   would   i   still   be   your   lover   ?' );
+
 
 
 app.get('/auditType', async (req, res, next) => {
