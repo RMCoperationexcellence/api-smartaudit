@@ -8,6 +8,8 @@ const PlantRoutes = require('./src/Routes/App/Get/PlantGet');
 const auditPostRoutes = require('./src/Routes/App/Post/AuditForm');
 const ResultGets = require('./src/Routes/App/Get/ResultGet');
 const figlet = require('figlet');
+const ADMicrosoft = require('./src/Auth/ADMicrosoft');
+const userExamRoutes = require('./src/Routes/RMCOP/userExam')
 
 const app = express();
 const port = 3001;
@@ -30,8 +32,7 @@ const logAsciiArt = (text) => {
     });
 };
 
-logAsciiArt('If   the   sun   refused   to   shine' );
-logAsciiArt('baby,   would   i   still   be   your   lover   ?' );
+logAsciiArt('SERVER   is   RUNNING' );
 
 
 
@@ -70,11 +71,14 @@ app.get('/AuditQuestion', async (req, res, next) => {
     }
 });
 
+
+app.use('/userEXAM', userExamRoutes);
 app.use('/auditPostForm', auditPostRoutes);
 app.use('/auditForm', auditFormRoutes);
 app.use('/login', auditLogin);
 app.use('/plantList', PlantRoutes);
-app.use('/results', ResultGets)
+app.use('/results', ResultGets);
+// app.use('/authenticate', ADMicrosoft);
 
 
 app.get('/getUserId', async (req, res) => {
