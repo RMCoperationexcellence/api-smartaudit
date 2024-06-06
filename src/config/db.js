@@ -1,21 +1,34 @@
 // db.js
-const mysql = require('mysql2/promise');
+const sql = require('mssql');
 const dbConfig = require('./setting');
 
-const mysqlConfig = {
-    host: dbConfig.DB_HOST,
+const sqlConfig = {
     user: dbConfig.DB_USER,
     password: dbConfig.DB_PASSWORD,
     database: dbConfig.DB_DATABASE,
-    port: dbConfig.DB_PORT,
+    server: dbConfig.DB_HOST,
+    port: parseInt(dbConfig.DB_PORT, 10), // Ensure port is a number
+    pool: {
+        max: 10,
+        min: 0,
+        idleTimeoutMillis: 30000,
+    },
+    options: {
+        encrypt: true, // Use this if you're on Windows Azure
+        trustServerCertificate: true // Change to true for local dev / self-signed certs
+    }
 };
 
-const pool = mysql.createPool({
-    ...mysqlConfig,
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0,
-    debug: false,
+const poolPromise = sql.connect(sqlConfig).then(pool => {
+    console.log('Connected to SQL Server');
+    return pool;
+}).catch(err => {
+    console.error('Database Connection Failed! Bad Config: ', err);
+    throw err;
 });
 
-module.exports = pool;
+module.exports = {
+    sql, poolPromise
+};
+
+
