@@ -1,4 +1,4 @@
-// db.js
+// new db.js
 const sql = require('mssql');
 const dbConfig = require('./setting');
 
