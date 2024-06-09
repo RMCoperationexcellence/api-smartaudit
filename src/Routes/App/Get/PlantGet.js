@@ -5,7 +5,7 @@ const router = express.Router();
 router.get('/', async (req, res, next) => {
     try {
         const pool = await poolPromise; // Await the poolPromise to get the pool instance
-        const result = await pool.request().query('SELECT * FROM plant LIMIT 10'); // Use the request method to execute the query
+        const result = await pool.request().query('SELECT * FROM plant'); // Use the request method to execute the query
         res.json(result.recordset); // Access the recordset to get the rows
     } catch (error) {
         next(error);
