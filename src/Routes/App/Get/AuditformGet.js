@@ -30,20 +30,36 @@ router.get('/auditQuestionResult', async (req, res, next) => {
                    .input('plant_no', sql.VarChar, plant_no);
         } else {
             sqlQuery = `
-            SELECT audit_group_id, 
-                   MAX(update_date) AS UPDATE_DATE,
-                   (SELECT CREATE_BY_USER_ID 
-                    FROM audit_result AS sub
-                    WHERE sub.audit_group_id = audit_result.audit_group_id
-                    AND sub.update_date = (SELECT MAX(update_date) 
-                                           FROM audit_result
-                                           WHERE audit_group_id = sub.audit_group_id
-                                           AND plant_no = @plant_no)
-                    AND plant_no = @plant_no
-                    FOR JSON PATH) AS CREATE_BY_USER_ID
-            FROM audit_result
-            WHERE plant_no = @plant_no
-            GROUP BY audit_group_id;`;
+            WITH LatestAuditResult AS (
+                SELECT 
+                    ar.audit_group_id, 
+                    MAX(ar.update_date) AS UPDATE_DATE
+                FROM audit_result ar
+                WHERE ar.plant_no = @plant_no
+                GROUP BY ar.audit_group_id
+            ),
+            LatestAuditUser AS (
+                SELECT 
+                    ar.audit_group_id, 
+                    ar.create_by_user_id, 
+                    ar.update_date
+                FROM audit_result ar
+                INNER JOIN LatestAuditResult lar
+                    ON ar.audit_group_id = lar.audit_group_id
+                    AND ar.update_date = lar.UPDATE_DATE
+                WHERE ar.plant_no = @plant_no
+            )
+            SELECT 
+                lar.audit_group_id, 
+                lar.UPDATE_DATE, 
+                CONCAT(e.name, ' ', e.sname) AS CREATE_BY_USER_NAME
+            FROM LatestAuditResult lar
+            INNER JOIN LatestAuditUser lau
+                ON lar.audit_group_id = lau.audit_group_id
+                AND lar.UPDATE_DATE = lau.update_date
+            LEFT JOIN emp e
+                ON e.emp = lau.create_by_user_id;                     
+        `;
 
             request.input('plant_no', sql.VarChar, plant_no);
         }

@@ -1,9 +1,7 @@
-// dbRMCOP.js
 const mysql = require('mysql2/promise');
 const { Client } = require('ssh2');
 const dbConfig = require('./setting');
 
-// Create SSH tunnel
 const sshConfig = {
     host: '110.170.60.48',
     port: 2222,
@@ -55,11 +53,18 @@ async function createSSHConnection() {
 
 async function createMySQLPool() {
     try {
-        const { stream } = await createSSHConnection();
+        const { client, stream } = await createSSHConnection();
         const pool = mysql.createPool({
             ...mysqlConfig,
             stream
         });
+
+        // Close SSH connection when pool is closed
+        pool.on('release', () => {
+            console.log('Closing SSH connection');
+            client.end();
+        });
+
         return pool;
     } catch (error) {
         console.error('Failed to create MySQL pool:', error);

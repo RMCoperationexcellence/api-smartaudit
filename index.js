@@ -10,7 +10,8 @@ const ResultGets = require('./src/Routes/App/Get/ResultGet');
 const figlet = require('figlet');
 const ADMicrosoft = require('./src/Auth/ADMicrosoft');
 const userExamRoutes = require('./src/Routes/RMCOP/userExam')
-
+const plantENVRoutes = require('./src/Routes/RMCOP/plantENV');
+const plantSafetyRoutes = require('./src/Routes/RMCOP/plantSafety');
 const app = express();
 const port = 3001;
 const host = process.env.HOST_IP;
@@ -78,6 +79,8 @@ app.use('/auditForm', auditFormRoutes);
 app.use('/login', auditLogin);
 app.use('/plantList', PlantRoutes);
 app.use('/results', ResultGets);
+app.use('/plantENV', plantENVRoutes);
+app.use('/plantSafety', plantSafetyRoutes);
 // app.use('/authenticate', ADMicrosoft);
 
 
