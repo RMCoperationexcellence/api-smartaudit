@@ -23,7 +23,8 @@ router.post('/', async (req, res) => {
                     choice_results,
                     k_score,
                     create_by_user_id,
-                    isFinished
+                    isFinished,
+                    Question_Score: questionScore, // Use a different name for destructured variable
                 } = item;
 
                 const auditGroupId = parseInt(audit_group_id, 10);
@@ -33,6 +34,7 @@ router.post('/', async (req, res) => {
                 const isFinishedVal = isFinished === null ? null : (isFinished === 1 ? 1 : 0);
 
                 const randomId = 'AUDIT' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+                const parsedQuestionScore = parseInt(questionScore, 10); // Change the name here too
 
                 await transaction.request()
                     .input('audit_result_id', sql.VarChar, randomId)
