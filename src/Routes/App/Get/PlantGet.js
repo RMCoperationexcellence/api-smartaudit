@@ -152,6 +152,8 @@ router.get('/PlantData', async (req, res, next) => {
             `;
         }
 
+        // update
+
         if (DivNo && DeptNo){
             query = `
             WITH TotalScores AS (
