@@ -42,7 +42,7 @@ router.get('/Master', async (req, res, next) => {
                 LEFT JOIN division d ON d.DIVISION_NO = ll.DIVISION_NO
                 LEFT JOIN department d2 ON d2.DEPT_NO = ll.DEPT_NO
                 LEFT JOIN [section] s ON s.SECT_NO = ll.SECT_NO
-                WHERE ll.DIVISION_NO = @DivNo
+                WHERE ll.DIVISION_NO = @DivNo AND d2.DEPT_NO IS NOT NULL
             `;
         }
 
@@ -54,7 +54,6 @@ router.get('/Master', async (req, res, next) => {
             LEFT JOIN department d2 ON d2.DEPT_NO = ll.DEPT_NO
             LEFT JOIN [section] s ON s.SECT_NO = ll.SECT_NO
             WHERE ll.DIVISION_NO = @DivNo AND ll.DEPT_NO = @DeptNo
-            AND d2.NAME IS NOT NULL            
             `;
         }
 
@@ -147,12 +146,11 @@ router.get('/PlantData', async (req, res, next) => {
                 WHERE ll.DIVISION_NO = @DivNo
                 AND d2.NAME IS NOT NULL
                 ORDER BY
+                d2.NAME,
                 p.PLANT_NO,
                 ag.AUDIT_GROUP_ID
             `;
         }
-
-        // update
 
         if (DivNo && DeptNo){
             query = `
@@ -217,8 +215,11 @@ router.get('/PlantData', async (req, res, next) => {
             WHERE ll.DIVISION_NO = @DivNo AND ll.DEPT_NO = @DeptNo
             AND d2.NAME IS NOT NULL
             ORDER BY
+            d2.NAME,
+                ll.DEPT_NO,
                 p.PLANT_NO,
-                ag.AUDIT_GROUP_ID            
+                ag.AUDIT_GROUP_ID
+                ASC          
             `;
         }
 
@@ -285,6 +286,8 @@ router.get('/PlantData', async (req, res, next) => {
             WHERE ll.DIVISION_NO = @DivNo AND ll.DEPT_NO = @DeptNo AND ll.SECT_NO = @SectNo
             AND d2.NAME IS NOT NULL
             ORDER BY
+            d2.NAME,
+                ll.DEPT_NO,
                 p.PLANT_NO,
                 ag.AUDIT_GROUP_ID            
             `;

@@ -101,6 +101,11 @@ router.post('/update', async (req, res) => {
                     DivManager_desc,
                 } = item;
 
+                let isFinished = 0;
+                if (FactoryHead_choice === 1 && DeptManager_choice === 1 && DivManager_choice === 1) {
+                    isFinished = 1;
+                }
+
                 await transaction.request()
                     .input('audit_result_id', sql.VarChar, audit_result_id)
                     .input('FactoryHead_choice', sql.Int, FactoryHead_choice)
@@ -109,6 +114,7 @@ router.post('/update', async (req, res) => {
                     .input('DeptManager_desc', sql.NVarChar, DeptManager_desc)
                     .input('DivManager_choice', sql.Int, DivManager_choice)
                     .input('DivManager_desc', sql.NVarChar, DivManager_desc)
+                    .input('isFinished', sql.Int, isFinished)
                     .query(`
                         UPDATE audit_result
                         SET
@@ -117,7 +123,8 @@ router.post('/update', async (req, res) => {
                             DeptManager_choice = @DeptManager_choice,
                             DeptManager_desc = @DeptManager_desc,
                             DivManager_choice = @DivManager_choice,
-                            DivManager_desc = @DivManager_desc
+                            DivManager_desc = @DivManager_desc,
+                            isFinished = @isFinished
                         WHERE audit_result_id = @audit_result_id;
                     `);
             }
@@ -134,5 +141,6 @@ router.post('/update', async (req, res) => {
         res.status(500).json({ success: false, message: 'Error establishing SQL connection.', error: error.message });
     }
 });
+
 
 module.exports = router;

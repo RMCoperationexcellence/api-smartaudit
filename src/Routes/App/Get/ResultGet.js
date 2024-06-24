@@ -13,6 +13,7 @@ router.get('/audit', async (req, res, next) => {
             SELECT
             ar.AUDIT_RESULT_ID,
             ag.NAME,
+            ag.RUN_NUMBER,
             aq.QUESTION_TEXT,
             ar.CHOICE_NO,
             ar.CHOICE_RESULTS,
@@ -93,8 +94,9 @@ router.get('/ResultDetail', async (req, res, next) => {
         const result = await pool.request()
             .input('AUDIT_RESULT_ID', sql.VarChar, AUDIT_RESULT_ID)
             .query(`
-            SELECT *
-            FROM audit_result ar 
+            SELECT ar.*,aq.QUESTION_TEXT
+            FROM audit_result ar
+            LEFT JOIN audit_question aq ON aq.QUESTION_ID = ar.QUESTION_ID
             WHERE AUDIT_RESULT_ID = @AUDIT_RESULT_ID
             `);
         res.json(result.recordset);
