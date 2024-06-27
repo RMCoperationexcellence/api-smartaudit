@@ -12,6 +12,7 @@ router.get('/audit', async (req, res, next) => {
             .query(`
             SELECT
             ar.AUDIT_RESULT_ID,
+            ag.AUDIT_GROUP_ID,
             ag.NAME,
             ag.RUN_NUMBER,
             aq.QUESTION_TEXT,
@@ -55,6 +56,7 @@ router.get('/auditV2', async (req, res, next) => {
             .query(`
             SELECT
             ar.AUDIT_RESULT_ID,
+            ag.AUDIT_GROUP_ID,
             ag.NAME,
             aq.QUESTION_TEXT,
             ar.CHOICE_NO,
