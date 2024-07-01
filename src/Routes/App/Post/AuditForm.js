@@ -32,12 +32,12 @@ router.post('/', async (req, res) => {
                 const choiceNo = parseInt(choice_no, 10);
                 const kScore = parseFloat(k_score);
                 const isFinishedVal = isFinished === null ? null : (isFinished === 1 ? 1 : 0);
-
-                const randomId = 'AUDIT' + Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+                const currentDate = new Date().toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' }).replace(/\//g, '');
+                const AUDIT_RESULT_GEN = plant_no + '-' + auditGroupId + '-' + questionId + '-' + currentDate;
                 const parsedQuestionScore = parseInt(questionScore, 10); // Change the name here too
 
                 await transaction.request()
-                    .input('audit_result_id', sql.VarChar, randomId)
+                    .input('audit_result_id', sql.VarChar, AUDIT_RESULT_GEN)
                     .input('audit_group_id', sql.Int, auditGroupId)
                     .input('question_id', sql.Int, questionId)
                     .input('plant_no', sql.VarChar, plant_no)

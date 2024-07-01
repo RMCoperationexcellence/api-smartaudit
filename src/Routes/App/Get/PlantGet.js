@@ -56,6 +56,7 @@ router.get('/Master', async (req, res, next) => {
                 LEFT JOIN department d2 ON d2.DEPT_NO = ll.DEPT_NO
                 LEFT JOIN [section] s ON s.SECT_NO = ll.SECT_NO
                 WHERE ll.DIVISION_NO = @divNo AND d2.DEPT_NO IS NOT NULL
+                ORDER BY d2.NAME
             `;
         }
 
@@ -67,6 +68,177 @@ router.get('/Master', async (req, res, next) => {
             LEFT JOIN department d2 ON d2.DEPT_NO = ll.DEPT_NO
             LEFT JOIN [section] s ON s.SECT_NO = ll.SECT_NO
             WHERE ll.DIVISION_NO = @divNo AND ll.DEPT_NO = @DeptNo
+            `;
+        }
+
+        logQuery(query, params);
+        const result = await request.query(query);
+        res.json(result.recordset);
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.get('/summaryBy', async (req, res, next) => {
+    const { DivNo, DeptNo, SectNo, StartDate, EndDate } = req.query;
+    try {
+        const pool = await poolPromise;
+        const request = pool.request();
+        const params = {};
+
+        if (DivNo) {
+            request.input('divNo', sql.Int, DivNo);
+            params['divNo'] = DivNo;
+        }
+        if (DeptNo) {
+            request.input('DeptNo', sql.Int, DeptNo);
+            params['DeptNo'] = DeptNo;
+        }
+        if (SectNo) {
+            request.input('SectNo', sql.Int, SectNo);
+            params['SectNo'] = SectNo;
+        }
+        if (StartDate) {
+            request.input('StartDate', sql.Date, StartDate);
+            params['StartDate'] = StartDate;
+        }
+        if (EndDate) {
+            request.input('EndDate', sql.Date, EndDate);
+            params['EndDate'] = EndDate;
+        }       
+
+        let query = `
+        WITH PLANT_CAR_GROUP AS (
+            SELECT
+                ar.PLANT_NO,
+                ar.AUDIT_GROUP_ID
+            FROM
+                audit_result ar
+            LEFT JOIN
+                audit_question aq ON aq.QUESTION_ID = ar.QUESTION_ID
+            WHERE
+                (ar.K_SCORE = 0 OR (aq.isMust = 1 AND ar.K_SCORE IN (1, 2)))
+        )
+        SELECT
+            ag.AUDIT_GROUP_ID,
+            ag.NAME AS 'AUDIT_GROUP_NAME',
+            'ข้อบกพร่อง' AS 'DEFECT_STATUS',
+            COUNT(PCG.PLANT_NO) AS 'CAR_COUNT'
+            FROM
+            audit_group ag
+        LEFT JOIN
+            PLANT_CAR_GROUP PCG ON PCG.AUDIT_GROUP_ID = ag.AUDIT_GROUP_ID
+        GROUP BY
+            ag.AUDIT_GROUP_ID, ag.NAME
+        ORDER BY
+            ag.AUDIT_GROUP_ID;
+        `;
+
+        if (DivNo && StartDate && EndDate) {
+            query = `
+            WITH PLANT_CAR_GROUP AS (
+                SELECT
+                    ar.PLANT_NO,
+                    ar.AUDIT_GROUP_ID
+                FROM
+                    audit_result ar
+                LEFT JOIN
+                    audit_question aq ON aq.QUESTION_ID = ar.QUESTION_ID
+                LEFT JOIN
+                    location_lnk ll ON ll.PLANT_NO = ar.PLANT_NO
+                WHERE
+                    (ar.K_SCORE = 0 OR (aq.isMust = 1 AND ar.K_SCORE IN (1, 2)))
+                    AND ll.DIVISION_NO = @DivNo
+                    AND ar.CREATE_DATE BETWEEN @StartDate AND @EndDate
+            )
+            SELECT
+                ag.AUDIT_GROUP_ID,
+                ag.NAME AS 'AUDIT_GROUP_NAME',
+                'ข้อบกพร่อง' AS 'DEFECT_STATUS',
+                COUNT(PCG.PLANT_NO) AS 'CAR_COUNT',
+                @StartDate AS 'Start_Date',
+                @EndDate AS 'End_Date'
+                FROM
+                audit_group ag
+            LEFT JOIN
+                PLANT_CAR_GROUP PCG ON PCG.AUDIT_GROUP_ID = ag.AUDIT_GROUP_ID
+            GROUP BY
+                ag.AUDIT_GROUP_ID, ag.NAME
+            ORDER BY
+                ag.AUDIT_GROUP_ID;
+            `;
+        }
+
+        if (DivNo && DeptNo && StartDate && EndDate){
+            query = `
+            WITH PLANT_CAR_GROUP AS (
+                SELECT
+                    ar.PLANT_NO,
+                    ar.AUDIT_GROUP_ID
+                FROM
+                    audit_result ar
+                LEFT JOIN
+                    audit_question aq ON aq.QUESTION_ID = ar.QUESTION_ID
+                LEFT JOIN
+                    location_lnk ll ON ll.PLANT_NO = ar.PLANT_NO
+                WHERE
+                    (ar.K_SCORE = 0 OR (aq.isMust = 1 AND ar.K_SCORE IN (1, 2)))
+                    AND ll.DIVISION_NO = @DivNo
+                    AND ll.DEPT_NO = @DeptNo
+                    AND ar.CREATE_DATE BETWEEN @StartDate AND @EndDate
+            )
+            SELECT
+                ag.AUDIT_GROUP_ID,
+                ag.NAME AS 'AUDIT_GROUP_NAME',
+                'ข้อบกพร่อง' AS 'DEFECT_STATUS',
+                COUNT(PCG.PLANT_NO) AS 'CAR_COUNT',
+                @StartDate AS 'Start_Date',
+                @EndDate AS 'End_Date'
+                FROM
+                audit_group ag
+            LEFT JOIN
+                PLANT_CAR_GROUP PCG ON PCG.AUDIT_GROUP_ID = ag.AUDIT_GROUP_ID
+            GROUP BY
+                ag.AUDIT_GROUP_ID, ag.NAME
+            ORDER BY
+                ag.AUDIT_GROUP_ID;
+            `;
+        }
+
+        if (DivNo && DeptNo && SectNo && StartDate && EndDate){
+            query = `
+            WITH PLANT_CAR_GROUP AS (
+                SELECT
+                    ar.PLANT_NO,
+                    ar.AUDIT_GROUP_ID
+                FROM
+                    audit_result ar
+                LEFT JOIN
+                    audit_question aq ON aq.QUESTION_ID = ar.QUESTION_ID
+                LEFT JOIN
+                    location_lnk ll ON ll.PLANT_NO = ar.PLANT_NO
+                WHERE
+                    (ar.K_SCORE = 0 OR (aq.isMust = 1 AND ar.K_SCORE IN (1, 2)))
+                    AND ll.DIVISION_NO = @DivNo
+                    AND ll.DEPT_NO = @DeptNo
+                    AND ll.SECT_NO = @SectNo
+                    AND ar.CREATE_DATE BETWEEN @StartDate AND @EndDate
+            )
+            SELECT
+                ag.AUDIT_GROUP_ID,
+                ag.NAME AS 'AUDIT_GROUP_NAME',
+                'ข้อบกพร่อง' AS 'DEFECT_STATUS',
+                COUNT(PCG.PLANT_NO) AS 'CAR_COUNT',
+                @StartDate AS 'Start_Date',
+                @EndDate AS 'End_Date'
+                FROM
+                audit_group ag
+            LEFT JOIN
+                PLANT_CAR_GROUP PCG ON PCG.AUDIT_GROUP_ID = ag.AUDIT_GROUP_ID
+            GROUP BY
+                ag.AUDIT_GROUP_ID, ag.NAME
+            ORDER BY
+                ag.AUDIT_GROUP_ID;
             `;
         }
 
@@ -172,6 +344,7 @@ router.get('/PlantData', async (req, res, next) => {
             AND d2.NAME IS NOT NULL
             ORDER BY
             d2.NAME,
+            s.NAME,
             p.PLANT_NO,
             ag.AUDIT_GROUP_ID
             `;
@@ -241,8 +414,8 @@ router.get('/PlantData', async (req, res, next) => {
             AND d2.NAME IS NOT NULL
             ORDER BY
             d2.NAME,
-                ll.DEPT_NO,
-                p.PLANT_NO,
+            s.NAME,
+            p.PLANT_NO,
                 ag.AUDIT_GROUP_ID
                 ASC          
             `;
@@ -312,9 +485,8 @@ router.get('/PlantData', async (req, res, next) => {
             AND d2.NAME IS NOT NULL
             ORDER BY
             d2.NAME,
-                ll.DEPT_NO,
-                ll.SECT_NO,
-                p.PLANT_NO,
+            s.NAME,
+            p.PLANT_NO,
                 ag.AUDIT_GROUP_ID
                 ASC           
             `;
@@ -387,9 +559,8 @@ router.get('/PlantData', async (req, res, next) => {
             AND d2.NAME IS NOT NULL
             ORDER BY
             d2.NAME,
-                ll.DEPT_NO,
-                ll.SECT_NO,
-                p.PLANT_NO,
+            s.NAME,
+            p.PLANT_NO,
                 ag.AUDIT_GROUP_ID
                 ASC 
             `;
@@ -402,3 +573,4 @@ router.get('/PlantData', async (req, res, next) => {
 });
 
 module.exports = router;
+    
